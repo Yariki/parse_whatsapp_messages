@@ -14,6 +14,42 @@ date_start = datetime(2025, 6, 11, 0,0)
 date_end = datetime(2025, 6, 12, 0,0)
 
 
+def parse_date(date_str):
+    date_format = '%d/%m/%y'
+    current_date = None
+    if date_str:
+        try:
+            current_date = datetime.strptime(date_str, date_format)
+        except ValueError:
+            # print(f"Malformed date: {date_str}")
+            # Attempt alternative year-length or delimiter:
+            try:
+                current_date = datetime.strptime(date_str, '%d/%m/%Y')
+            except ValueError:
+                # print(f"Malformed date: {date_str}")  # skip malformed lines
+                pass
+    return current_date
+
+
+def parse_timestamp(date_str, time_str):   
+    # Construct full datetime string
+    timestamp = None
+    dt_format = '%d/%m/%y, %H:%M' # '%m/%d/%y, %I:%M' if '/' in date_str else 
+    if date_str and time_str:
+        date_str = f"{date_str}, {time_str}"
+        try:
+            timestamp = datetime.strptime(date_str, dt_format)
+        except ValueError:
+            #print(f"Malformed date: {date_str} {time_str}")
+            # Attempt alternative year-length or delimiter:
+            try:
+                timestamp = datetime.strptime(date_str, '%d/%m/%Y, %H:%M')
+            except ValueError:
+                #print(f"Malformed date: {date_str} {time_str}")
+                pass
+    return timestamp
+
+
 def parse_whatsapp_export(file_path):
     """Parse a WhatsApp-exported .txt chat and yield (datetime, sender, message)."""
     with open(file_path, 'r', encoding='utf-8') as f:
@@ -33,23 +69,13 @@ def parse_whatsapp_export(file_path):
             message = m.group('message').strip() if m.group('message') else ''
             message2 = m.group('message2').strip() if m.group('message2') else ''
 
-            date_frm = '%d/%m/%Y'
-            date_current = datetime.strptime(date_str, date_frm)  if date_str else date_end
-            if date_current < date_start or date_current > date_end:
+            date_current = parse_date(date_str)
+            if date_current != None and (date_current < date_start or date_current > date_end):
                 continue
 
             # Construct full datetime string
-            dt_format = '%d/%m/%y, %H:%M' # '%m/%d/%y, %I:%M' if '/' in date_str else 
             if date_str and time_str:
-                date_str = f"{date_str}, {time_str}"
-                try:
-                    timestamp = datetime.strptime(date_str, dt_format)
-                except ValueError:
-                    # Attempt alternative year-length or delimiter:
-                    try:
-                        timestamp = datetime.strptime(date_str, '%d/%m/%Y, %H:%M')
-                    except ValueError:
-                        continue  # skip malformed lines
+                timestamp = parse_timestamp(date_str, time_str)
             elif message2:
                 message = message2
 
