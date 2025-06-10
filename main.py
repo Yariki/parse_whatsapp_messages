@@ -10,6 +10,9 @@ LINE_PATTERN = re.compile(
     r'(^(?P<date>\d{1,2}\/\d{1,2}\/\d{2,4})\,\s(?P<time>\d{1,2}\:\d{2})\s\W\s(?P<sender>[^:]*)\:(?P<message>.*)$|^(?P<message2>.*)$)'
 )
 
+date_start = datetime(2025, 6, 11, 0,0)
+date_end = datetime(2025, 6, 12, 0,0)
+
 
 def parse_whatsapp_export(file_path):
     """Parse a WhatsApp-exported .txt chat and yield (datetime, sender, message)."""
@@ -29,6 +32,11 @@ def parse_whatsapp_export(file_path):
             sender = m.group('sender').strip() if m.group('sender') else ''
             message = m.group('message').strip() if m.group('message') else ''
             message2 = m.group('message2').strip() if m.group('message2') else ''
+
+            date_frm = '%d/%m/%Y'
+            date_current = datetime.strptime(date_str, date_frm)  if date_str else date_end
+            if date_current < date_start or date_current > date_end:
+                continue
 
             # Construct full datetime string
             dt_format = '%d/%m/%y, %H:%M' # '%m/%d/%y, %I:%M' if '/' in date_str else 
