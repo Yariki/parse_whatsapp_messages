@@ -17,17 +17,16 @@ date_end = datetime(2025, 6, 12, 0,0)
 def parse_date(date_str):
     date_format = '%d/%m/%y'
     current_date = None
-    if date_str:
+    if not date_str:
+        return None
+    try:
+        current_date = datetime.strptime(date_str, date_format)
+    except ValueError:
+        # Attempt alternative year-length or delimiter:
         try:
-            current_date = datetime.strptime(date_str, date_format)
+            current_date = datetime.strptime(date_str, '%d/%m/%Y')
         except ValueError:
-            # print(f"Malformed date: {date_str}")
-            # Attempt alternative year-length or delimiter:
-            try:
-                current_date = datetime.strptime(date_str, '%d/%m/%Y')
-            except ValueError:
-                # print(f"Malformed date: {date_str}")  # skip malformed lines
-                pass
+            pass
     return current_date
 
 
@@ -35,18 +34,18 @@ def parse_timestamp(date_str, time_str):
     # Construct full datetime string
     timestamp = None
     dt_format = '%d/%m/%y, %H:%M' # '%m/%d/%y, %I:%M' if '/' in date_str else 
-    if date_str and time_str:
-        date_str = f"{date_str}, {time_str}"
+    if not date_str or not time_str:
+        return None
+
+    date_str = f"{date_str}, {time_str}"
+    try:
+        timestamp = datetime.strptime(date_str, dt_format)
+    except ValueError:
+        # Attempt alternative year-length or delimiter:
         try:
-            timestamp = datetime.strptime(date_str, dt_format)
+            timestamp = datetime.strptime(date_str, '%d/%m/%Y, %H:%M')
         except ValueError:
-            #print(f"Malformed date: {date_str} {time_str}")
-            # Attempt alternative year-length or delimiter:
-            try:
-                timestamp = datetime.strptime(date_str, '%d/%m/%Y, %H:%M')
-            except ValueError:
-                #print(f"Malformed date: {date_str} {time_str}")
-                pass
+            pass
     return timestamp
 
 
@@ -70,12 +69,13 @@ def parse_whatsapp_export(file_path):
             message2 = m.group('message2').strip() if m.group('message2') else ''
 
             date_current = parse_date(date_str)
-            if date_current != None and (date_current < date_start or date_current > date_end):
+            if date_current and (date_current < date_start or date_current > date_end):
                 continue
 
             # Construct full datetime string
             if date_str and time_str:
                 timestamp = parse_timestamp(date_str, time_str)
+                timestamp = timestamp if timestamp else datetime(0,0,0,0,0)
             elif message2:
                 message = message2
 
