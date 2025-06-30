@@ -27,6 +27,7 @@ DATE_FORMAT = '%d.%m.%y'
 DATE_FORMAT_2 = '%d.%m.%Y'  # Alternative date format
 
 OUT_BP = ['Лісове','Трикутник','Олешки','Лозова']
+OUT_BP_PATTERN = re.compile('Лісове|Трикутник|Олешки|Лозова')
 
 date_start = datetime(2025, 6, 1, 0,0)
 date_end = datetime(2025, 6, 30, 0,0)
@@ -82,7 +83,8 @@ def parse_whatsapp_export(file_path):
                     last_entry['message'] += '\n' + line
                 continue
             elif last_entry and m:
-                if any(bp in last_entry['message'] for bp in OUT_BP):
+                bp_match = re.search(OUT_BP_PATTERN, last_entry['message'])
+                if bp_match:
                     messages.append(last_entry)  # Save the last entry before starting a new one
                 last_entry = None  # Reset last_entry after processing
 
@@ -112,8 +114,8 @@ def parse_whatsapp_export(file_path):
         return
     tz_sum = 0
     for entry in messages:
-        print(f"Timestamp: {entry['timestamp']}, Sender: {entry['sender']}, Message: {entry['message']}")
-        print("\n" + "="*50 + "\n")
+        #print(f"Timestamp: {entry['timestamp']}, Sender: {entry['sender']}, Message: {entry['message']}")
+        #print("\n" + "="*50 + "\n")
         mes = entry['message']
         match = re.search(TZ_PATTERN, mes)
         if match:
